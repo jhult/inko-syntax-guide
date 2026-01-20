@@ -1,0 +1,136 @@
+{
+  "lockfile-version": 1,
+  "manifest": {
+    "version": 1,
+    "install": {
+      "mdformat-simple-breaks": {
+        "pkg-path": "python312Packages.mdformat-simple-breaks"
+      }
+    },
+    "hook": {},
+    "profile": {},
+    "options": {}
+  },
+  "packages": [
+    {
+      "attr_path": "python312Packages.mdformat-simple-breaks",
+      "broken": false,
+      "derivation": "/nix/store/rs20lfrynksx1jcb35y8d3dyi8hd4b06-python3.12-mdformat-simple-breaks-0.0.1.drv",
+      "description": "Mdformat plugin to render thematic breaks using three dashes",
+      "install_id": "mdformat-simple-breaks",
+      "license": "MIT",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=c0b0e0fddf73fd517c3471e546c0df87a42d53f4",
+      "name": "python3.12-mdformat-simple-breaks-0.0.1",
+      "pname": "mdformat-simple-breaks",
+      "rev": "c0b0e0fddf73fd517c3471e546c0df87a42d53f4",
+      "rev_count": 917670,
+      "rev_date": "2025-12-28T06:08:05Z",
+      "scrape_date": "2025-12-29T03:03:23.459406Z",
+      "stabilities": [
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "0.0.1",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "dist": "/nix/store/7srgg47pd4rq8if3xa6k2fm8pfqa2r3h-python3.12-mdformat-simple-breaks-0.0.1-dist",
+        "out": "/nix/store/k649b3yqm8x4wnpympflnmjkdq790ybr-python3.12-mdformat-simple-breaks-0.0.1"
+      },
+      "system": "aarch64-darwin",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "python312Packages.mdformat-simple-breaks",
+      "broken": false,
+      "derivation": "/nix/store/hh4swhnf08w8gb9nd1r4ddi8c0g2f58c-python3.12-mdformat-simple-breaks-0.0.1.drv",
+      "description": "Mdformat plugin to render thematic breaks using three dashes",
+      "install_id": "mdformat-simple-breaks",
+      "license": "MIT",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=c0b0e0fddf73fd517c3471e546c0df87a42d53f4",
+      "name": "python3.12-mdformat-simple-breaks-0.0.1",
+      "pname": "mdformat-simple-breaks",
+      "rev": "c0b0e0fddf73fd517c3471e546c0df87a42d53f4",
+      "rev_count": 917670,
+      "rev_date": "2025-12-28T06:08:05Z",
+      "scrape_date": "2025-12-29T03:19:13.171722Z",
+      "stabilities": [
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "0.0.1",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "dist": "/nix/store/2xwbdi848s58icsq4haclwrrw1ysymr2-python3.12-mdformat-simple-breaks-0.0.1-dist",
+        "out": "/nix/store/dzskqnnf4mdw4c8kqfllgh8z3dc6cmiq-python3.12-mdformat-simple-breaks-0.0.1"
+      },
+      "system": "aarch64-linux",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "python312Packages.mdformat-simple-breaks",
+      "broken": false,
+      "derivation": "/nix/store/vl8sp2m6f3mw2sxrwyrjgbymj2ipy3y7-python3.12-mdformat-simple-breaks-0.0.1.drv",
+      "description": "Mdformat plugin to render thematic breaks using three dashes",
+      "install_id": "mdformat-simple-breaks",
+      "license": "MIT",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=c0b0e0fddf73fd517c3471e546c0df87a42d53f4",
+      "name": "python3.12-mdformat-simple-breaks-0.0.1",
+      "pname": "mdformat-simple-breaks",
+      "rev": "c0b0e0fddf73fd517c3471e546c0df87a42d53f4",
+      "rev_count": 917670,
+      "rev_date": "2025-12-28T06:08:05Z",
+      "scrape_date": "2025-12-29T03:35:42.887012Z",
+      "stabilities": [
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "0.0.1",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "dist": "/nix/store/r5cq92a2ph8aq0kf5bllffy9rkdjjnw5-python3.12-mdformat-simple-breaks-0.0.1-dist",
+        "out": "/nix/store/bv7im0sjbnjpnfcg18zvwsbxvk7hsjm5-python3.12-mdformat-simple-breaks-0.0.1"
+      },
+      "system": "x86_64-darwin",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "python312Packages.mdformat-simple-breaks",
+      "broken": false,
+      "derivation": "/nix/store/wwnqdn3pxs4mnirb309s7sg7n2grsi71-python3.12-mdformat-simple-breaks-0.0.1.drv",
+      "description": "Mdformat plugin to render thematic breaks using three dashes",
+      "install_id": "mdformat-simple-breaks",
+      "license": "MIT",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=c0b0e0fddf73fd517c3471e546c0df87a42d53f4",
+      "name": "python3.12-mdformat-simple-breaks-0.0.1",
+      "pname": "mdformat-simple-breaks",
+      "rev": "c0b0e0fddf73fd517c3471e546c0df87a42d53f4",
+      "rev_count": 917670,
+      "rev_date": "2025-12-28T06:08:05Z",
+      "scrape_date": "2025-12-29T03:51:31.960221Z",
+      "stabilities": [
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "0.0.1",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "dist": "/nix/store/x3npgsi5nsp74iaa9drz6rkmp6c6c1jb-python3.12-mdformat-simple-breaks-0.0.1-dist",
+        "out": "/nix/store/5yqmsi8grmvvsl4d1rw1qwv7laylnyc0-python3.12-mdformat-simple-breaks-0.0.1"
+      },
+      "system": "x86_64-linux",
+      "group": "toplevel",
+      "priority": 5
+    }
+  ]
+}
