@@ -5,10 +5,12 @@
 **Base URL:** `https://raw.githubusercontent.com/jhult/inko-syntax-guide/trunk/`
 
 **Required reading (fetch these files):**
+
 1. `01-quick-reference.md` - **Critical syntax rules** (read first)
 2. `12-gotchas.md` - Common mistakes that cause compile errors
 
 **Additional references as needed:**
+
 - `02-types-memory.md` - Types and memory management
 - `03-methods-functions.md` - Methods and functions
 - `04-pattern-matching.md` - Pattern matching
