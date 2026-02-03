@@ -316,6 +316,108 @@ process.send(c)
 - More flexibility in data structure design
 - Simpler mental model, but with runtime cost
 
+### Common Ownership Patterns
+
+**Pattern 1: Borrow for reading, keep for later**
+
+```inko
+fn process_data(data: ref Array[Int]) -> Int {
+  data.size
+}
+
+let items = [1, 2, 3]
+let count = process_data(items)
+# items still usable here because we passed ref
+items.push(4)
+```
+
+**Pattern 2: Transfer ownership to function**
+
+```inko
+fn consume_data(data: Array[Int]) {
+  # data is dropped after this function
+}
+
+let items = [1, 2, 3]
+consume_data(items)
+# items is moved, can't use here
+```
+
+**Pattern 3: Unique values for concurrency**
+
+```inko
+let unique_data = recover [1, 2, 3]
+# Can safely send unique_data between processes
+# Compiler prevents creating borrows that could cause races
+```
+
+### Reference Type Decision Matrix
+
+| Need | Use | Example |
+|------|-----|---------|
+| Read only, keep original | `ref T` | `fn size(data: ref Array[Int])` |
+| Modify, keep original | `mut T` | `fn append(data: mut Array[Int])` |
+| Take ownership, don't need original | `T` | `fn consume(data: Array[Int])` |
+| Send to another process | `uni T` | `process.send(data)` |
+
+**Rule of thumb:** Use `ref` by default, `mut` when modifying, owned `T` only when transferring ownership. Use `uni` when sending between processes.
+
+### Borrow Counter Mechanics
+
+Every heap-allocated value has a borrow counter:
+
+```inko
+let data = [1, 2, 3]  # borrow count = 0
+let r1 = ref data     # borrow count = 1
+let r2 = ref data     # borrow count = 2
+# data dropped here → panic if count > 0
+```
+
+**Key insight:** Dropping happens when variable goes out of scope, not when you stop using it.
+
+**Safe pattern:**
+
+```inko
+let data = [1, 2, 3]
+{
+  let r = ref data
+  # use r here
+}  # r dropped, borrow count decremented
+# data safe to drop here
+```
+
+**Dangerous pattern:**
+
+```inko
+let data = [1, 2, 3]
+let r = ref data
+# ... lots of code ...
+# data drops when function returns
+# If r is still in scope, PANIC
+```
+
+### Value Types Behavior
+
+**Copied on move:**
+
+```inko
+let a = "hello"      # String is a value type
+let b = a            # a is copied
+# Both a and b are usable
+```
+
+**Not value types (moved):**
+
+```inko
+let a = [1, 2, 3]    # Array is NOT a value type
+let b = a            # a is moved
+# Only b is usable
+```
+
+**Value type list:** `Int`, `Float`, `Bool`, `String`, `Nil`, processes
+
+**Everything else moves** (Array, HashMap, custom types, etc.)
+
 ### Drop Timing
 
 Values drop **deterministically** when ownership ends:
