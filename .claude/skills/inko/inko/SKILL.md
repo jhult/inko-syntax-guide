@@ -17,7 +17,7 @@ scope: development
 output-format: commands
 metadata:
   author: jhult
-  version: 2.1.0
+  version: 2.2.0
 ---
 
 # Inko Language Skill
@@ -49,6 +49,7 @@ These are the rules that most often cause compile errors. Violating any of these
 | `Result[T, std.io.Error]` | `import std.io (Error)` then `Result[T, Error]` | No nested paths in type annotations |
 | `var @field: Type` | `let mut @field: Type` | Mutable fields use `let mut`, not `var` |
 | `println(x)` | `out.print("${x}\n")` or `out.write(...)` | No `println` — use `Stdout.new` |
+| `UInt8` / `UInt16` / etc. | `Uint8` / `Uint16` / etc. | FFI types use lowercase `int` (0.20.0 breaking change) |
 
 ## Method Signature Patterns
 
@@ -80,6 +81,9 @@ type pub Counter { let mut @count: Int }
 
 # Stack-allocated (small types, value-like)
 type inline pub Point { let @x: Int, let @y: Int }
+
+# Atomically reference-counted (shared immutable with String fields, NEW 0.20.0)
+type ref pub SharedConfig { let @name: String, let @version: Int }
 
 # Enum/ADT
 type enum pub Status { case Active, case Inactive }
@@ -161,6 +165,12 @@ These differ from what you'd expect from other languages. Using the wrong name c
 | Array push | `arr.push(value)` | Appends to end |
 | Array size | `arr.size` | Number of elements |
 | Read file | `File.new(path).or_panic(...)` | Returns `Result[File, Error]` |
+| JSON build | `Json.object.string('k', v).into_string` | Builder pattern, not manual Map |
+| JSON array | `Json.array.string('a').into_string` | Array builder pattern |
+| Structured log | `Logger.new(out).info("msg")` | `import std.log (Logger)` |
+| Gzip encode | `Encoder.new.compress(data)` | `import std.compress.gzip (Encoder)` |
+| Atomic bool | `AtomicBool.new(false)` | `import std.sync (AtomicBool)` |
+| Atomic int | `AtomicInt.new(0)` | `import std.sync (AtomicInt)` |
 
 ## Common Import Patterns
 
@@ -179,7 +189,9 @@ import std.bytes (ByteArray, Bytes, ToSlice)
 import std.map (Map)
 import std.array (Array)
 import std.cmp (Compare, Ordering)
-import std.sync (Promise)
+import std.sync (Promise, AtomicBool, AtomicInt)
+import std.log (Logger)
+import std.compress.gzip (Encoder)
 ```
 
 ## Syntax Guide (fetch only for domain-specific questions)
@@ -225,6 +237,12 @@ inko build --release --target amd64-linux-gnu --linker zig src/main.inko
 
 Build output: Debug → `build/debug/`, Release → `build/release/`, Cross-compiled → `build/<target>/`
 
+**Container image (Inko 0.20.0):** `ghcr.io/inko-lang/inko@sha256:fa5aad694709c95e7e9abe3fd290f71ec62f1b4e2b230fad8b56b6b64617052e`
+
+Use this image in CI or local Docker environments to ensure a consistent Inko toolchain.
+
+Build output: Debug → `build/debug/`, Release → `build/release/`, Cross-compiled → `build/<target>/`
+
 ## Test and Format Commands
 
 ```bash
@@ -250,7 +268,7 @@ inko fmt src/ test/
 ## Anti-Patterns
 
 - Writing Inko without consulting this skill — incorrect syntax from other languages is the #1 error source
-- Using `class`, `self.`, `+=`, `=>`, `&&`, `||`, `Type<T>`, `&mut`, `.unwrap()`, `?`, `var @field`, `println()` — all from other languages, none compile
+- Using `class`, `self.`, `+=`, `=>`, `&&`, `||`, `Type<T>`, `&mut`, `.unwrap()`, `?`, `var @field`, `println()`, `UInt8`/`UInt16`/`UInt32`/`UInt64` — all from other languages or pre-0.20.0, none compile
 - Guessing stdlib method names — use the table above (`Map.set` not `insert`, `to_lower` not `to_lowercase()`, etc.)
 - Forgetting that `Array.get` and `Map.get` return `Result`, not `Option` — pattern match with `Ok`/`Error`
 - Using `Some(x)` or `None` as expressions — they must be `Option.Some(x)` and `Option.None`
