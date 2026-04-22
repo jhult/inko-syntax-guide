@@ -1,10 +1,10 @@
-# Inko 0.19.1 Syntax Guide
+# Inko 0.20.0 Syntax Guide
 
-A comprehensive guide to Inko 0.19.1 syntax and patterns, learned from building Inko projects. This guide focuses on commonly used patterns, gotchas, and best practices.
+A comprehensive guide to Inko 0.20.0 syntax and patterns, learned from building Inko projects. This guide focuses on commonly used patterns, gotchas, and best practices.
 
-**Inko Version:** 0.19.1
+**Inko Version:** 0.20.0
 **LLVM Support:** Versions 18-21
-**Last Updated:** January 19, 2026
+**Last Updated:** April 22, 2026
 
 ---
 
