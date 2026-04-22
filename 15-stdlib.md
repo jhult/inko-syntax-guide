@@ -1,4 +1,4 @@
-# Standard Library Reference (0.19.1)
+# Standard Library Reference (0.20.0)
 
 **Official Documentation:** [https://docs.inko-lang.org/std/main/](https://docs.inko-lang.org/std/main/)
 
@@ -12,6 +12,14 @@ Example: [std.array documentation](https://docs.inko-lang.org/std/main/module/st
 - **std.map** - A hash map using linear probing and Robin Hood entry stealing
 - **std.set** - A hash set implemented using a Map
 - **std.deque** - A double-ended queue
+
+## Concurrency
+
+- **std.sync** - Synchronization primitives including `Promise` and `Future`
+- **std.sync.AtomicBool** - Atomically operated boolean (NEW in 0.20.0)
+- **std.sync.AtomicInt** - Atomically operated integer (NEW in 0.20.0)
+
+Both `AtomicBool` and `AtomicInt` use acquire and release semantics for atomic operations. Useful for cross-process synchronization when message-passing cost is too high.
 
 ## Types
 
@@ -43,6 +51,25 @@ Example: [std.array documentation](https://docs.inko-lang.org/std/main/module/st
 - **std.crypto.chacha** - ChaCha family of stream ciphers
 - **std.crypto.poly1305** - Poly1305 universal hash function
 
+## Compression
+
+- **std.compress.gzip** - Compression and decompression using gzip (NEW in 0.20.0)
+
+```inko
+import std.compress.gzip (Encoder)
+import std.stdio (Stdout)
+
+type async Main {
+  fn async main {
+    let enc = Encoder.new(Stdout.new)
+    enc.write('hello world').or_panic
+    enc.finish.or_panic
+  }
+}
+```
+
+Built on libz-rs-sys (pure Rust zlib) — no extra C dependencies.
+
 ## Random Numbers
 
 - **std.rand** - Cryptographically secure random number generation (pure Inko using ChaCha20!)
@@ -71,14 +98,26 @@ Example: [std.array documentation](https://docs.inko-lang.org/std/main/module/st
 - **std.process** - Lightweight Inko processes
 - **std.test** - A simple unit testing library
 - **std.fmt** - Formatting of Inko values for debugging
+- **std.log** - Structured logging of wide events (NEW in 0.20.0)
 
-## Compression
+### Structured Logging (std.log)
 
-- **std.compress.gzip** - Compression and decompression using gzip
+Events are queryable names rather than arbitrary text. Formatting is asynchronous so producer cost is consistent regardless of output format complexity.
 
-## Concurrency
+```inko
+import std.log (Logger)
 
-- **std.sync** - Synchronization primitives including `Promise` and `Future`
+type async Main {
+  fn async main {
+    let logger = Logger.text
+
+    logger.event('user_login_failed').with('name', 'Alice').with('attempts', 3).submit
+  }
+}
+# Output: 2026-04-21T16:44:07.557Z user_login_failed name="Alice" attempts=3
+```
+
+JSON output is also supported (use `Logger.json`).
 
 ## Common Import Patterns
 
@@ -114,4 +153,13 @@ import std.bytes (ByteArray, Bytes, ToSlice)
 
 # Concurrency
 import std.sync (Promise)
+
+# Structured logging
+import std.log (Logger)
+
+# Atomic operations
+import std.sync (AtomicBool, AtomicInt)
+
+# Gzip compression
+import std.compress.gzip (Encoder)
 ```
