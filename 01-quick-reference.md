@@ -12,10 +12,16 @@
 | Field access | `self.field` | `@field` |
 | Increment | `x += 1` | `x = x + 1` |
 | Logical operators | `&&` / `\|\|` | `and` / `or` |
-| Array access | `arr[0]` | `arr.get(0)` (returns Result!) |
+| Array access | `arr[0]` | `arr.get(0)` (returns `Result[ref T, ...]`!) |
 | Public visibility | `pub fn foo()` | `fn pub foo()` |
 | Mutable method | `fn foo(&mut self)` | `fn pub mut foo` |
 | Static method | `fn foo()` in impl | `fn pub static foo` |
+| Match patterns | `case Option.Some(v)` | `case Some(v)` |
+| Option as expression | `None` / `Some(x)` | `Option.None` / `Option.Some(x)` |
+| Mutable ref param | `mut param: Type` | `param: mut Type` |
+| Rebindable param | `param: mut Type` | `mut param: Type` |
+| Unary negation | `(-x)` | `0 - x` |
+| Nested type paths | `Result[T, std.io.Error]` | `import std.io (Error)` then use `Error` |
 
 ## Inko is NOT Like Other Languages
 
@@ -66,6 +72,9 @@ type pub MyType { let @field: Type }
 
 # Stack-allocated (small types)
 type inline pub Point { let @x: Int, let @y: Int }
+
+# Atomically reference-counted (shared immutable, NEW 0.20.0)
+type ref pub SharedConfig { let @name: String, let @version: Int }
 
 # Enum/ADT
 type enum pub Status { case Active, case Inactive }
