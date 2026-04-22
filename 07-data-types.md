@@ -66,6 +66,32 @@ let full_slice = text.to_slice  # Slice[String]
 let text = "Hello"
 let bytes = text.to_bytes
 
+### JSON Builder Pattern (NEW in 0.20.0)
+
+Instead of manually constructing Maps for JSON output, use the builder pattern:
+
+```inko
+import std.json (Json)
+
+# Old way (still works)
+let map = Map.new
+map.set('name', Json.String('Alice'))
+map.set('age', Json.Int(42))
+Json.Object(map).to_string
+
+# New builder pattern
+Json.object.string('name', 'Alice').int('age', 42).into_string
+
+# Array builder
+Json.array.string('hello').string('world').into_string
+```
+
+**Key points:**
+
+- `Json.object` returns an `ObjectBuilder` — chain `.string(key, val)`, `.int(key, val)`, etc.
+- `Json.array` returns an `ArrayBuilder` — chain typed value methods
+- Both support `.into_string` to produce the final JSON string
+
 # Access individual byte
 match bytes.get(0) {
   case Ok(byte) -> {
@@ -168,8 +194,8 @@ match arr.get_mut(0) {
 
 **CRITICAL CHANGE in 0.19.1:**
 
-- `Array.get(index)` now returns `Result[T, OutOfBounds]` (not `Option[T]`)
-- `Array.get_mut(index)` returns `Result[mut T, OutOfBounds]`
+- `Array.get(index)` returns `Result[ref T, OutOfBounds]` — a **reference** to the element, not an owned copy. Use `.clone` on the extracted value for non-value types.
+- `Array.get_mut(index)` returns `Result[mut T, OutOfBounds]` — a mutable reference
 - `ByteArray.get(index)` also returns `Result`
 - Do NOT use `.unwrap()` - it doesn't exist for Result types
 - Use pattern matching or `.or_panic(message)` for quick conversions

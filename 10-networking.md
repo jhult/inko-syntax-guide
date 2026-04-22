@@ -137,6 +137,41 @@ fn pub connect_to(host: String, port: Int) -> Result[Bool, String] {
 
 ---
 
+## Interrupting TcpServer (NEW in 0.20.0)
+
+The previous approach (cloning `TcpServer`, sending to another process, calling `shutdown`) doesn't work on macOS. Use the new `Notifier` API instead:
+
+```inko
+import std.net.socket (TcpServer)
+import std.net.ip (IpAddress)
+import std.sync (AtomicBool)
+
+type async Main {
+  fn async main {
+    let server = TcpServer.new
+    let notifier = server.notifier
+
+    # Start server in current process
+    match server.start(3000) {
+      case Ok(_) -> loop { }
+      case Error(e) -> panic("Failed: ${e}")
+    }
+
+    # From another process, interrupt the server:
+    notifier.notify
+  }
+}
+```
+
+**Key points:**
+
+- Create `TcpServer` using `TcpServer.new` (no address argument)
+- Get `Notifier` using `TcpServer.notifier`
+- Call `Notifier.notify` to interrupt the server's `accept` call
+- Works across all platforms (Linux, macOS, Windows)
+
+---
+
 ## Signal Handling
 
 ```inko
