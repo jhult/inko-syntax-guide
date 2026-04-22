@@ -64,7 +64,7 @@ impl HashMap[K, V] {
 
 ## Type Modifiers
 
-Inko provides five distinct type definition modifiers, each optimized for different use cases.
+Inko provides six distinct type definition modifiers, each optimized for different use cases.
 
 ### Regular `type` (Heap-Allocated)
 
@@ -140,6 +140,30 @@ type copy pub Color {
 - No mutation needed
 - Maximum performance for small value types
 
+### `type ref` (Atomically Reference-Counted Types) — NEW in 0.20.0
+
+Atomically reference-counted types that behave as value types. Multiple owners can read fields simultaneously.
+
+```inko
+type ref pub SharedConfig {
+  let @name: String
+  let @version: Int
+}
+```
+
+**Key characteristics:**
+
+- Use atomic reference counting (thread-safe shared ownership)
+- Considered value types — `let b = a` copies the reference, both can read
+- **Immutable** — cannot assign fields new values or mutate in-place
+- May only store other `ref` or `copy` types (e.g., `Int`, `String`)
+
+**When to use:**
+
+- Shared immutable data that multiple processes need to read
+- Data that needs to cross process boundaries without copying
+- Replacement for `type copy` when `String` fields are needed (since `type copy` cannot contain `String`)
+
 ### `type enum` (Algebraic Data Types)
 
 Enum classes support variants with or without associated data.
@@ -212,16 +236,19 @@ impl Worker {
 1. Need mutation in-place, recursion, many heap values (8+), size 128+ bytes, or trait casting?
    -> Use regular `type`
 
-2. Only storing primitive `copy` types (`Int`, `Float`, `Bool`) without mutation?
+2. Shared immutable data with `String` fields that multiple processes need to read?
+   -> Use `type ref`
+
+3. Only storing primitive `copy` types (`Int`, `Float`, `Bool`) without mutation?
    -> Use `type copy`
 
-3. All other cases (small types, mixed value/heap types, need some mutability)?
+4. All other cases (small types, mixed value/heap types, need some mutability)?
    -> Use `type inline`
 
-4. Algebraic data types?
+5. Algebraic data types?
    -> Use `type enum` (optionally with `inline` or `copy`)
 
-5. Concurrent processes?
+6. Concurrent processes?
    -> Use `type async`
 
 ---
@@ -318,6 +345,61 @@ process.send(c)
 
 ### Common Ownership Patterns
 
+**Pattern 0: Implementing `Clone` for custom types**
+
+When you need to get owned copies from `ref T` references (e.g., from `Array.get`), your type must implement the `Clone` trait. This is especially important for `type inline` enums containing non-value types like `String` or `Array`.
+
+```inko
+import std.clone (Clone)
+
+type inline pub Color {
+  let @name: String
+  let @rgb: Array[Int]
+}
+
+impl Clone for Color {
+  fn pub clone -> Self {
+    Color(name: @name.clone, rgb: @rgb.clone)
+  }
+}
+```
+
+For `type enum` with variants containing heap data:
+
+```inko
+import std.clone (Clone)
+
+type inline enum pub JsonValue {
+  case Null
+  case Boolean(Bool)
+  case Number(String)
+  case String(String)
+  case Array(Array[JsonValue])
+  case Object(Array[(String, JsonValue)])
+}
+
+impl Clone for JsonValue {
+  fn pub clone -> Self {
+    match self {
+      case Null -> JsonValue.Null
+      case Boolean(b) -> JsonValue.Boolean(b)
+      case Number(n) -> JsonValue.Number(n.clone)
+      case String(s) -> JsonValue.String(s.clone)
+      case Array(a) -> JsonValue.Array(a.clone)
+      case Object(o) -> JsonValue.Object(o.clone)
+    }
+  }
+}
+```
+
+**Key points:**
+
+- `type copy` types automatically copy — no `Clone` implementation needed
+- `type inline` and regular `type` need `impl Clone for X` if you need `.clone`
+- Value type fields (`Int`, `Float`, `Bool`, `String`) copy automatically inside the clone method
+- Non-value type fields (`Array`, custom types) need `.clone` in the implementation
+- `Bool` is a value type — no `.clone` needed for boolean fields
+
 **Pattern 1: Borrow for reading, keep for later**
 
 ```inko
@@ -349,6 +431,43 @@ consume_data(items)
 let unique_data = recover [1, 2, 3]
 # Can safely send unique_data between processes
 # Compiler prevents creating borrows that could cause races
+```
+
+**Pattern 4: `@field` access in `fn mut` methods returns `mut T`**
+
+Inside a `fn mut` method, accessing `@field` yields a `mut T` (mutable reference). This means:
+- You can assign to `@field` directly (e.g., `@count = @count + 1`)
+- Returning `@field` returns a `mut T` reference, not an owned value
+- To get an owned copy, use `@field.clone` for non-value types
+
+```inko
+impl Counter {
+  fn pub mut increment -> mut Counter {
+    @count = @count + 1
+    self  # Returns mut Counter
+  }
+
+  fn pub count_copy -> Int {
+    @count  # Int is a value type, copies automatically
+  }
+
+  fn pub name_copy -> String {
+    @name.clone  # String is a value type, copies automatically
+    # For non-value types like Array, .clone is required
+  }
+}
+```
+
+**Important:** To extract owned values from a `mut T` reference to a struct (e.g., from `config.gateway` which is `mut GatewaySettings`), read individual fields and reconstruct a new owned instance:
+
+```inko
+# config.gateway is mut GatewaySettings (mutable reference)
+# Can't move it, but can read its fields
+let gateway_owned = GatewaySettings(
+  size_threshold: config.gateway.size_threshold,  # Int copies
+  name: config.gateway.name.clone,                 # String copies
+  items: config.gateway.items.clone,               # Array needs .clone
+)
 ```
 
 ### Reference Type Decision Matrix
@@ -451,3 +570,29 @@ let b = recover {
 
 - Only unique values, value types, or owned types containing sendable subtypes can cross `recover` boundaries
 - Ensures data isolation for safe concurrency
+
+### Escape Analysis (0.20.0)
+
+The compiler performs inter-procedural escape analysis during the inlining pass. Heap-allocated values that don't escape their scope are automatically promoted to stack allocations, reducing heap allocations by ~50% on average.
+
+```bash
+# View escape analysis statistics
+inko build --release --escape-stats
+```
+
+**Key points:**
+
+- Analysis is inter-procedural — the compiler looks at the program as a whole, not just individual methods
+- Non-inlined method calls whose arguments are flagged as "won't escape" can still have heap values promoted
+- The inliner processes method calls in reverse topological order (callees before callers)
+- No code changes needed — this is an automatic optimization
+
+### String Memory Layout (0.20.0)
+
+Strings now use a single allocation with embedded metadata instead of two separate allocations:
+
+**Old layout (32 bytes minimum, 2 allocations):** Object header + size + pointer → separate byte array
+
+**New layout (16 bytes minimum, 1 allocation):** Size + references + heap/stack flag + string bytes — all in one allocation
+
+This reduces memory usage and allocation overhead for strings. No code changes needed.
