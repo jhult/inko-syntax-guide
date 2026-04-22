@@ -32,20 +32,20 @@ Use `fn extern function_name(params) -> ReturnType` to declare C functions:
 fn extern sodium_init -> Int32
 
 # Function with parameters
-fn extern randombytes_buf(buf: Pointer[UInt8], len: Int64)
+fn extern randombytes_buf(buf: Pointer[Uint8], len: Int64)
 
 # Function returning pointer
-fn extern sodium_version_string -> Pointer[UInt8]
+fn extern sodium_version_string -> Pointer[Uint8]
 
 # Function with multiple parameters
-fn extern crypto_sign_keypair(pk: Pointer[UInt8], sk: Pointer[UInt8]) -> Int32
+fn extern crypto_sign_keypair(pk: Pointer[Uint8], sk: Pointer[Uint8]) -> Int32
 ```
 
 **Key points:**
 
-- Use C integer types: `Int8`, `Int16`, `Int32`, `Int64`, `UInt8`, `UInt16`, `UInt32`, `UInt64`
+- Use C integer types: `Int8`, `Int16`, `Int32`, `Int64`, `Uint8`, `Uint16`, `Uint32`, `Uint64`
 - Use `Float32` or `Float64` for floating-point types
-- Use `Pointer[T]` for pointer types (e.g., `Pointer[UInt8]` for `uint8_t*`)
+- Use `Pointer[T]` for pointer types (e.g., `Pointer[Uint8]` for `uint8_t*`)
 - Omit return type for void functions
 
 ## Calling External Functions
@@ -58,7 +58,7 @@ let result = sodium_init
 
 # With parameters
 let buf = ByteArray.filled(with: 0, times: 32)
-randombytes_buf(buf.to_pointer as Pointer[UInt8], 32)
+randombytes_buf(buf.to_pointer as Pointer[Uint8], 32)
 
 # Check return value
 if result == 0 {
@@ -80,7 +80,7 @@ let c_result = some_c_function()
 let inko_result = c_result.to_int
 
 # Cast pointer types
-let ptr = buffer.to_pointer as Pointer[UInt8]
+let ptr = buffer.to_pointer as Pointer[Uint8]
 ```
 
 ## Pointer Types
@@ -89,10 +89,10 @@ Use typed pointers for safety:
 
 ```inko
 # Pointer to bytes
-let byte_ptr: Pointer[UInt8]
+let byte_ptr: Pointer[Uint8]
 
 # Pointer to pointer (e.g., char** in C)
-let ptr_ptr: Pointer[Pointer[UInt8]]
+let ptr_ptr: Pointer[Pointer[Uint8]]
 
 # Pointer to integers
 let int_ptr: Pointer[Int64]
@@ -129,10 +129,10 @@ import extern "sodium"
 
 # Declare extern functions
 fn extern sodium_init -> Int32
-fn extern randombytes_buf(buf: Pointer[UInt8], len: Int64)
+fn extern randombytes_buf(buf: Pointer[Uint8], len: Int64)
 fn extern crypto_hash_sha256(
-  output: Pointer[UInt8],
-  input: Pointer[UInt8],
+  output: Pointer[Uint8],
+  input: Pointer[Uint8],
   inlen: Int64
 ) -> Int32
 
@@ -153,15 +153,15 @@ impl SodiumRandom {
 
   fn pub random_bytes(size: Int) -> ByteArray {
     let buf = ByteArray.filled(with: 0, times: size)
-    let ptr = buf.to_pointer as Pointer[UInt8]
+    let ptr = buf.to_pointer as Pointer[Uint8]
     randombytes_buf(ptr, size as Int64)
     buf
   }
 
   fn pub hash_sha256(input: ByteArray) -> Result[ByteArray, String] {
     let output = ByteArray.filled(with: 0, times: 32)
-    let output_ptr = output.to_pointer as Pointer[UInt8]
-    let input_ptr = input.to_pointer as Pointer[UInt8]
+    let output_ptr = output.to_pointer as Pointer[Uint8]
+    let input_ptr = input.to_pointer as Pointer[Uint8]
     let result = crypto_hash_sha256(
       output_ptr,
       input_ptr,
@@ -188,7 +188,7 @@ impl SodiumRandom {
 
 - Use explicit casts for pointer types
 - Ensure integer sizes match between Inko and C
-- Use correct signedness (Int vs UInt)
+- Use correct signedness (Int vs Uint)
 
 ### Error Handling
 
@@ -199,9 +199,10 @@ impl SodiumRandom {
 ### Common Pitfalls
 
 - Don't use `extern fn` syntax (deprecated)
-- Don't try to use `std.ffi` module (doesn't exist in 0.19.1)
+- Don't try to use `std.ffi` module (doesn't exist in 0.20.0)
 - Remember to link the library with `import extern`
 - Use `Pointer[T]` not raw `Pointer`
+- **0.20.0 breaking change:** `UInt8`/`UInt16`/`UInt32`/`UInt64` renamed to `Uint8`/`Uint16`/`Uint32`/`Uint64`
 
 ## Debugging FFI Issues
 
@@ -218,17 +219,17 @@ impl SodiumRandom {
 
 **"the module 'std.ffi' couldn't be found":**
 
-- Don't import std.ffi in Inko 0.19.1
+- Don't import std.ffi in Inko 0.20.0
 - Use `import extern` and `fn extern` directly
 
 **Type mismatch errors:**
 
-- Use explicit casts: `value as Pointer[UInt8]`
+- Use explicit casts: `value as Pointer[Uint8]`
 - Convert between Inko and C types: `.to_int64`, `.to_int`
 - Check pointer types match C function signatures
 - **Important:** Int32 from FFI needs `as Int` cast before comparisons
 - **Integer conversions:** Pass Int values as Int64 to FFI functions with Int64 parameters using `value as Int64`
-- **NULL pointers:** Use `(0 as Pointer[UInt64])` for NULL pointer parameters
+- **NULL pointers:** Use `(0 as Pointer[Uint64])` for NULL pointer parameters
 
 **Ownership with FFI:**
 
