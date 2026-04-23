@@ -195,7 +195,7 @@ impl ArbitraryDetector {
 }
 ```
 
-## Type Aliases Not Supported (0.19.1)
+## Type Aliases Not Supported
 
 **Cannot create type aliases like Rust:**
 

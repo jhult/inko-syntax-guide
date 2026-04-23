@@ -144,7 +144,7 @@ match value {
   case Ok(v) => "success"
 }
 
-# CORRECT (0.19.1)
+# CORRECT (0.20.0)
 match value {
   case Ok(v) -> "success"
 }
