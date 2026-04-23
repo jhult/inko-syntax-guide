@@ -15,11 +15,12 @@ Before outputting Inko code, verify each item:
 
 ## Type System Verification
 
-- [ ] **Array access**: `.get(i)` returns `Result`, not `Option`
-- [ ] **Option/Result**: Using `Option.Some(x)` and `Result.Ok(x)` with full paths in expressions
+- [ ] **Array access**: `.get(i)` returns `Result[ref T, ...]`, not `Option`. Use `.clone` for owned copies of non-value types.
+- [ ] **Option/Result in match**: Using `case Some(v)` and `case None` in match **patterns**, but `Option.Some(x)` and `Option.None` as **expressions**
 - [ ] **Return statements**: Can use bare `Ok(x)` and `Error(e)` in return statements only
 - [ ] **Generic syntax**: Using `Type[T]` not `Type<T>`
 - [ ] **Mutable fields**: Using `let mut @field` for mutable fields
+- [ ] **Clone for custom types**: `impl Clone for X` needed for `type inline` and regular `type` if you need `.clone`
 
 ## Error Handling Verification
 
@@ -40,13 +41,17 @@ Before outputting Inko code, verify each item:
 - [ ] **References**: Using `ref T` and `mut T` not `&T` and `&mut T`
 - [ ] **Unique values**: Using `uni T` and `recover { }` for process-safe values
 - [ ] **Cloning**: Using `.clone` to copy owned values when needed
+- [ ] **Parameter mut**: `param: mut Type` for mutable references, `mut param: Type` for rebindable locals
+- [ ] **@field in fn mut**: Accessing `@field` in `fn mut` methods returns `mut T` — use `.clone` or extract fields for owned copies
 
 ## Before Finalizing
 
 1. Re-read the [Quick Reference](01-quick-reference.md) section
 2. Check against [Common Gotchas](12-gotchas.md) table
-3. Verify all imports use correct module paths (`std.module (Symbol)`)
+3. Verify all imports use correct module paths (`std.module (Symbol)`) — no nested paths like `std.io.Error` in type annotations
 4. Ensure field names are prefixed with `@` inside methods
+5. Verify no `(-x)` unary negation — use `0 - x` instead
+6. Verify `read_line` EOF handling checks `Ok(0)`, not `Error`
 
 ---
 
