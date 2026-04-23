@@ -436,6 +436,7 @@ let unique_data = recover [1, 2, 3]
 **Pattern 4: `@field` access in `fn mut` methods returns `mut T`**
 
 Inside a `fn mut` method, accessing `@field` yields a `mut T` (mutable reference). This means:
+
 - You can assign to `@field` directly (e.g., `@count = @count + 1`)
 - Returning `@field` returns a `mut T` reference, not an owned value
 - To get an owned copy, use `@field.clone` for non-value types

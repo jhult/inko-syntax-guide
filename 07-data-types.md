@@ -65,6 +65,7 @@ let full_slice = text.to_slice  # Slice[String]
 ```inko
 let text = "Hello"
 let bytes = text.to_bytes
+```
 
 ### JSON Builder Pattern (NEW in 0.20.0)
 
@@ -93,6 +94,8 @@ Json.array.string('hello').string('world').into_string
 - Both support `.into_string` to produce the final JSON string
 
 # Access individual byte
+
+```inko
 match bytes.get(0) {
   case Ok(byte) -> {
     let byte_as_int = byte.to_int

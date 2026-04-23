@@ -1,3 +1,3 @@
 #!/usr/bin/env bash
 
-flox activate -- mdformat --number .
+flox activate -- find . -name '*.md' -not -name 'SKILL.md' -exec mdformat --number {} +
