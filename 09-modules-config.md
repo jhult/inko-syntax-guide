@@ -174,7 +174,7 @@ import std.net.http.server
 ### Import Specific Symbols
 
 ```inko
-import std.int (Int, Format)
+import std.int (Int)
 import std.net.http.server (Handle, Request, Response, Server)
 ```
 
@@ -187,10 +187,10 @@ import std.net.http.server (Handle, Request, Response, Server)
 
 ```inko
 # When imported with (Symbol)
-let x = Int.parse("123", format: Format.Decimal)
+let x = Int.parse("123", format: base: 10)
 
 # When importing entire module
-let x = std.int.Int.parse("123", format: std.int.Format.Decimal)
+let x = std.int.Int.parse("123", format: base: 10)
 ```
 
 ### Module Structure
@@ -255,10 +255,10 @@ fn pub get_config -> String {
 ### Parsing Integers from Strings
 
 ```inko
-import std.int (Int, Format)
+import std.int (Int)
 
 fn pub parse_port(port_str: String) -> Int {
-  match Int.parse(port_str, format: Format.Decimal) {
+  match Int.parse(port_str, format: base: 10) {
     case Some(p) -> p
     case None -> 3000  # default
   }
@@ -267,7 +267,7 @@ fn pub parse_port(port_str: String) -> Int {
 
 **Key points:**
 
-- `Int.parse()` takes two args: string and `format: Format.Decimal`
+- `Int.parse()` takes two args: string and `format: base: 10`
 - `Int.parse()` returns `Option[Int]` (not Result!)
 - Import `Format` from `std.int`, NOT `std.fmt`
 

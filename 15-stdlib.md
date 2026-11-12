@@ -137,7 +137,7 @@ import std.env
 import std.env (arguments)
 
 # Integers
-import std.int (Int, Format)
+import std.int (Int)
 
 # Time
 import std.time.duration (Duration)

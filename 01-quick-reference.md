@@ -103,13 +103,13 @@ let value = try! may_fail()
 
 ```inko
 import std.env
-import std.int (Int, Format)
+import std.int (Int)
 import std.net.http.server (Handle, Request, Response, Server)
 import std.stdio (Stdout)
 
 fn pub server_port -> Int {
   match env.get("PORT") {
-    case Ok(v) -> match Int.parse(v, format: Format.Decimal) {
+    case Ok(v) -> match Int.parse(v, format: base: 10) {
       case Some(p) -> p
       case None -> 3000
     }
