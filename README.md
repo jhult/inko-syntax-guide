@@ -34,6 +34,7 @@ A comprehensive guide to Inko 0.21.1 syntax and patterns, learned from building 
 | [16-advanced.md](16-advanced.md) | Advanced patterns, traits, iterators, tips |
 | [17-ffi.md](17-ffi.md) | Foreign Function Interface (FFI) for calling C code |
 | [18-checklist.md](18-checklist.md) | Code generation checklist for verification |
+| [19-shared-state.md](19-shared-state.md) | Sharing state across processes: actors, `uni`/`recover`, `type ref`, atomics, channels |
 
 ---
 

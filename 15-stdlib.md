@@ -15,11 +15,15 @@ Example: [std.array documentation](https://docs.inko-lang.org/std/main/module/st
 
 ## Concurrency
 
-- **std.sync** - Synchronization primitives including `Promise` and `Future`
+- **std.sync** - Synchronization primitives: `Future`, `Promise`, `Channel`, `AtomicBool`, `AtomicInt`
 - **std.sync.AtomicBool** - Atomically operated boolean (NEW in 0.20.0)
 - **std.sync.AtomicInt** - Atomically operated integer (NEW in 0.20.0)
 
 Both `AtomicBool` and `AtomicInt` use acquire and release semantics for atomic operations. Useful for cross-process synchronization when message-passing cost is too high.
+
+There is no public `Mutex[T]` or `RwLock[T]`. To share mutable state across
+processes, use a process that owns the value; see
+[19-shared-state.md](19-shared-state.md).
 
 ## Types
 

@@ -16,6 +16,7 @@
 - `04-pattern-matching.md` - Pattern matching
 - `05-error-handling.md` - Error handling
 - `06-concurrency.md` - Processes and async
+- `19-shared-state.md` - Sharing state across processes (actors, `uni`/`recover`, `type ref`, atomics, channels)
 - `07-data-types.md` - Strings, Arrays, Option, Result
 - `18-checklist.md` - Code generation verification checklist
 
