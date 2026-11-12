@@ -29,12 +29,12 @@ let add = fn (a: Int, b: Int) -> Int { a + b }
 # Closure with no arguments
 let greet = fn { "Hello!" }
 
-# Closure with error handling
-let may_fail = fn (x: Int) !! Error -> Int {
+# Closure with error handling (closures return Result like methods)
+let may_fail = fn (x: Int) -> Result[Int, String] {
   if x < 0 {
-    throw Error.new("Negative number")
+    throw "Negative number"
   }
-  x * 2
+  Result.Ok(x * 2)
 }
 
 # Using closures
@@ -75,21 +75,24 @@ let x = value as Int + 10  # Parsed as (value as Int) + 10
 - Use parentheses for clarity: `if (a > 10) and (b < 20)`
 - Type casting (`as`) has higher precedence than binary operators
 
-## String Continuation
+## Multi-line Strings
 
-Long strings can be continued with trailing `\`:
+There is no `\` line continuation. A string literal may span multiple lines,
+and the newlines are kept as-is:
 
 ```inko
-let long_string = "This is a very long string \
-that continues on the next line \
+let long_string = "This is a very long string
+that continues on the next line
 and keeps going"
 ```
 
-**Key points:**
+If you don't want the newlines, concatenate with `+`:
 
-- Trailing `\` removes the newline
-- Works only in double-quoted strings
-- Whitespace after `\` on the next line is included
+```inko
+let long_string = "This is a very long string " +
+  "that continues on the next line " +
+  "and keeps going"
+```
 
 ## Module Aliasing
 
@@ -97,7 +100,7 @@ and keeps going"
 import std.string (String as StdString, ToString)
 
 # Use aliased name to avoid conflicts
-let items = StdString.join(iterable, with: ' ')
+let items = StdString.join(values.into_iter, with: ' ')
 ```
 
 **Key points:**
@@ -108,17 +111,27 @@ let items = StdString.join(iterable, with: ' ')
 ## Using Duration
 
 ```inko
-import std.time.duration (Duration)
+import std.sync (Channel)
+import std.time (Duration)
 
-# Create duration from seconds
-let timeout = Duration.from_seconds(1)
+# Create durations
+let timeout = Duration.from_secs(1)
+let short = Duration.from_millis(500)
 
-# Use with blocking operations that accept timeouts
-match Signal.receive(timeout: timeout) {
-  case Ok(signal) -> # handle signal
-  case Error(_) -> # handle timeout
+# Timeouts are passed as deadlines, via Duration.to_instant
+let queue: Channel[uni Int] = Channel.new
+
+match queue.receive_until(timeout.to_instant) {
+  case Some(value) -> # got a value
+  case None -> # timed out
 }
 ```
+
+**Key points:**
+
+- `Duration` lives in `std.time`, not `std.time.duration`
+- Constructors are `from_secs`, `from_millis`, `from_micros`, `from_nanos`
+- Timeouts are usually passed as a `ToInstant` deadline: `duration.to_instant`
 
 ## Tuple Return Values
 
@@ -208,12 +221,14 @@ type pub Email = ParsedEmailMessage  # Compile error!
 **Workaround:** Use the original type name directly, or wrap it in a new type:
 
 ```inko
-# Option 1: Use original type directly
-fn pub check(email: ref ParsedEmailMessage) -> Array[String]
+# Option 1: Use the original type directly
+fn pub check(email: ref EmailMessage) -> Array[String] {
+  # ...
+}
 
-# Option 2: Create wrapper type
+# Option 2: Create a wrapper type
 type pub EmailWrapper {
-  let @email: ParsedEmailMessage
+  let @email: EmailMessage
 }
 ```
 

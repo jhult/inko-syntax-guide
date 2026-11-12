@@ -93,7 +93,7 @@ Json.array.string('hello').string('world').into_string
 - `Json.array` returns an `ArrayBuilder` — chain typed value methods
 - Both support `.into_string` to produce the final JSON string
 
-# Access individual byte
+### Getting Individual Bytes
 
 ```inko
 match bytes.get(0) {
@@ -128,8 +128,11 @@ let is_empty = text.size == 0
 # Get size
 let size = text.size
 
-# Split
-let parts = text.split(",")  # Returns Array[String]
+# Split (returns an iterator, not an Array)
+let parts = text.split(",")
+
+# Collect the parts into an Array
+let parts_array = text.split(",").to_array
 
 # To uppercase/lowercase
 let upper = text.to_upper
@@ -138,19 +141,15 @@ let lower = text.to_lower
 
 ### Single-Quoted vs Double-Quoted Strings
 
-**Single-quoted strings** - escape sequences shown as-is:
+Single and double quoted strings are **identical**: both support escape
+sequences and interpolation. Use whichever you prefer (the standard library
+favours single quotes):
 
 ```inko
-let path = 'C:\Users\name'  # Backslashes are literal
-let text = 'Hello\nWorld'   # Contains literal \n, not newline
-```
-
-**Double-quoted strings** - support escapes and interpolation:
-
-```inko
-let text = "Hello\nWorld"   # Contains actual newline
+let text = 'Hello\nWorld'          # Contains an actual newline
+let path = "C:\\Users\\name"    # Backslash needs escaping in both forms
 let name = "Alice"
-let greeting = "Hello, ${name}!"  # Interpolation works
+let greeting = 'Hello, ${name}!'   # Interpolation works in both forms
 
 # Unicode escapes
 let emoji = "Smile: \u{1F600}"
@@ -184,13 +183,16 @@ match arr.get(0) {
   case Error(_) -> # index out of bounds
 }
 
-# Panic on out of bounds
-let value = arr.get(0).or_panic("index out of bounds")
+# Panic on out of bounds (no arguments; the error is the message)
+let value = arr.get(0).or_panic
+
+# ...or with a custom message
+let value = arr.get(0).or_panic_with("index out of bounds")
 
 # Mutable access
 let mut arr = [1, 2, 3]
 match arr.get_mut(0) {
-  case Ok(mut_ref) -> mut_ref = 10  # Modify through mutable reference
+  case Ok(mut value) -> value = 10  # Modify through the mutable reference
   case Error(_) -> {}
 }
 ```
@@ -201,7 +203,7 @@ match arr.get_mut(0) {
 - `Array.get_mut(index)` returns `Result[mut T, OutOfBounds]` — a mutable reference
 - `ByteArray.get(index)` also returns `Result`
 - Do NOT use `.unwrap()` - it doesn't exist for Result types
-- Use pattern matching or `.or_panic(message)` for quick conversions
+- Use pattern matching, `.or_panic`, or `.or_panic_with(message)` for quick conversions
 
 **Migration from old API:**
 
@@ -212,7 +214,7 @@ match arr.get_mut(0) {
 | `arr.opt(0)` | `arr.get(0)` |
 | `arr.opt_mut(0)` | `arr.get_mut(0)` |
 | `arr.remove_at(0)` | `arr.remove_at(0).or_panic` |
-| `arr.remove(key)` | `arr.remove(key).or_panic` |
+| `map.remove(key)` | `map.remove(key).or_panic` |
 | `Result.ok` to convert | `result.ok` for Option[T] from Result[T, E] |
 
 ### Array Slicing (NEW in 0.19.1)
@@ -324,8 +326,8 @@ let result = ByteArray.new
 result.push(42)
 
 # Slicing ByteArray
-let bytes = "hello".to_byte_array
-let slice = bytes.slice(0, 3)  # Slice[ByteArray]
+let hello = "hello".to_byte_array
+let slice = hello.slice(0, 3)  # Slice[ByteArray]
 ```
 
 **Key points:**

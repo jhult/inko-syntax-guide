@@ -54,6 +54,8 @@ processes, use a process that owns the value; see
 - **std.crypto.sha1** - SHA1 hash function
 - **std.crypto.chacha** - ChaCha family of stream ciphers
 - **std.crypto.poly1305** - Poly1305 universal hash function
+- **std.crypto.blake2** - BLAKE2b hash function (NEW in 0.21.0)
+- **std.crypto.argon2** - Argon2id password hashing (NEW in 0.21.0)
 
 ## Compression
 
@@ -80,10 +82,10 @@ Built on libz-rs-sys (pure Rust zlib) — no extra C dependencies.
 
 ## I/O and Filesystem
 
-- **std.io** - Types for core IO functionality
-- **std.fs** - General types for filesystem operations
-- **std.fs.file** - Types and methods for manipulating files
-- **std.fs.path** - Cross-platform path manipulation
+- **std.io** - Types for core IO functionality (`Read`, `Write`, `BufferedReader`, ...)
+- **std.fs** - General types for filesystem operations (`Metadata`, `FileType`, ...)
+- **std.fs.file** - `ReadOnlyFile`, `WriteOnlyFile`, `ReadWriteFile`
+- **std.fs.path** - Cross-platform path manipulation (`Path`)
 - **std.stdio** - Standard input and output streams
 
 ## Data Formats
@@ -127,10 +129,12 @@ JSON output is also supported (use `Logger.json`).
 
 ```inko
 # HTTP Server
-import std.net.http.server (Handle, Request, Response, Server, Status, Header)
+import std.net.http (Header, Status)
+import std.net.http.server (Handle, Request, Response, Server)
 
 # File I/O
-import std.fs.file (File)
+import std.bytes (ByteArray)
+import std.fs.file (ReadOnlyFile, WriteOnlyFile)
 import std.io (Read, Write)
 
 # JSON
@@ -144,7 +148,7 @@ import std.env (arguments)
 import std.int (Int)
 
 # Time
-import std.time.duration (Duration)
+import std.time (Duration)
 
 # Testing
 import std.test (Tests)
@@ -153,7 +157,7 @@ import std.test (Tests)
 import std.string (StringBuffer, ToString)
 
 # Bytes
-import std.bytes (ByteArray, Bytes, ToSlice)
+import std.bytes (Bytes, ToSlice)
 
 # Concurrency
 import std.sync (Promise)

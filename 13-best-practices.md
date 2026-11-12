@@ -40,10 +40,22 @@ fn pub divide(a: Int, b: Int) -> Int {
 ### 3. Use Option for Optional Values
 
 ```inko
-# Good
-fn pub find(id: Int) -> Option[User] {
-  match @users.get(id) {
-    case Ok(user) -> Option.Some(user)
+import std.clone (Clone)
+import std.map (Map)
+
+type pub User {
+  let @name: String
+}
+
+impl Clone for User {
+  fn pub clone -> Self {
+    User(name: @name.clone)
+  }
+}
+
+fn find(users: ref Map[Int, User], id: Int) -> Option[User] {
+  match users.get(id) {
+    case Ok(user) -> Option.Some(user.clone)  # get returns ref V
     case Error(_) -> Option.None
   }
 }
@@ -52,15 +64,22 @@ fn pub find(id: Int) -> Option[User] {
 ### 4. Explicit Mutability
 
 ```inko
-# Good - clear what's mutable
-fn pub mut process(input: String) -> String {
-  @state = @state + 1
-  input
+type pub Parser {
+  let mut @state: Int
+  let @value: String
 }
 
-# Be intentional about mutability
-fn pub read_only -> String {
-  @value.clone
+impl Parser {
+  # Good - clear what's mutable
+  fn pub mut process(input: String) -> String {
+    @state = @state + 1
+    input
+  }
+
+  # Be intentional about mutability
+  fn pub read_only -> String {
+    @value.clone
+  }
 }
 ```
 
@@ -75,7 +94,7 @@ match result {
 
 # Avoid
 if result.ok? {
-  let value = result.or_panic("unreachable")
+  let value = result.or_panic
   # handle success
 } else {
   # handle error
@@ -94,8 +113,13 @@ for (key, value) in pairs {
   store(key, value)
 }
 
-# Old style (still works but verbose)
-collection.iter.each(fn (item) { process(item) })
+# Ranges are iterators too
+for i in 0.until(collection.size) {
+  process(i)
+}
+
+# Avoid: `Iter.each` doesn't exist in 0.21
+# collection.iter.each(fn (item) { process(item) })
 ```
 
 ### 7. Import Specific Symbols
@@ -165,7 +189,7 @@ Choose the right type modifier for your use case:
 11. **Use `ref` for borrowing** - `Option[ref T]` and `ref value` for references
 12. **Implement traits** - Use `impl TraitName for TypeName` for interfaces
 13. **Use static factory methods** - `default`, `strict`, `permissive` patterns
-14. **Iterator methods are powerful** - `find_map`, `map`, `join` for transformations
+14. **Iterator methods are powerful** - `find_map`, `map`, `filter`/`select`, `to_array` for transformations (there is no `Iter.join`; use `String.join(iter, with: sep)`)
 15. **ByteArray for binary data** - Use `.to_byte_array` and `ByteArray.new`
 16. **String API: use `.substring()` for String results, `.slice()` for Slice views**
 17. **Use `.contains?()` for substring checks (predicate method)**

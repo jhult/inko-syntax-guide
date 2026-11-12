@@ -49,10 +49,14 @@ fn pub tests(t: mut Tests) {
 ## Test Assertions
 
 ```inko
-t.equal(expected, actual)  # Equality check
-t.true(value)              # Boolean true assertion
-t.false(value)             # Boolean false assertion
+t.equal(got, expected)  # Equality check: actual value first, expected second
+t.true(value)           # Boolean true assertion
+t.false(value)          # Boolean false assertion
 ```
+
+Other useful assertions: `not_equal(got, expected)`, `greater(got, minimum)`,
+and `greater_or_equal(got, minimum)`. The closure argument is a `mut Test`, not
+a `mut Tests`.
 
 **Note:** There is no `t.assert()`, `t.pass()`, or `t.fail()` method. Use `t.true(false)` to force a failure if needed.
 
@@ -89,7 +93,7 @@ match result {
 }
 ```
 
-**Ownership in tests** - Use `.clone()` when values are needed multiple times:
+**Ownership in tests** - Use `.clone` when values are needed multiple times:
 
 ```inko
 t.test("Hash multiple times", fn (t) {

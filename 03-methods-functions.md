@@ -3,13 +3,25 @@
 ## Public vs Private
 
 ```inko
-# Public method
-fn pub static public_method(input: String) -> String {
-  input
-}
+type Widget {}
 
-# Private method (no pub keyword)
-fn private_method(input: String) -> String {
+impl Widget {
+  # Public method
+  fn pub public_method(input: String) -> String {
+    input
+  }
+
+  # Private method (no pub keyword)
+  fn private_method(input: String) -> String {
+    input
+  }
+}
+```
+
+Module (top-level) methods use the same rule; note they can't be `static`:
+
+```inko
+fn pub module_method(input: String) -> String {
   input
 }
 ```
@@ -83,13 +95,15 @@ fn pub mut process(input: String) -> String {
 
 The correct order of method modifiers is:
 
-```inko
-fn pub static new(...)        # Static constructor
-fn pub method_name(...)       # Public instance method (immutable)
-fn pub mut method_name(...)   # Public instance method (mutable)
-fn pub async method_name(...) # Async public method
-fn pub async mut method(...)  # Async mutable public method
-```
+| Kind | Syntax |
+|------|--------|
+| Static constructor | `fn pub static new(...)` |
+| Public instance method (immutable) | `fn pub method_name(...)` |
+| Public instance method (mutable) | `fn pub mut method_name(...)` |
+| Async public method | `fn pub async method_name(...)` |
+| Async mutable public method | `fn pub async mut method(...)` |
+
+`pub` always comes directly after `fn`, followed by `static`, `async`, or `mut`.
 
 ## Visibility Rules
 
@@ -104,13 +118,13 @@ fn pub async mut method(...)  # Async mutable public method
 # Private type
 type Internal {}
 
-# ERROR: Can't have public method on private type in public API
-fn pub static get_internal -> Internal {  # Compile error!
+# ERROR: a public method can't return a private type
+fn pub get_internal -> Internal {  # Compile error!
   Internal()
 }
 
-# OK: Private method can return private type
-fn static get_internal -> Internal {
+# OK: a private method can return a private type
+fn get_internal -> Internal {
   Internal()
 }
 ```
@@ -148,9 +162,18 @@ if list.empty? {
 **Setter methods** end with `=`:
 
 ```inko
-fn pub mut name=(new_name: String) {
-  @name = new_name
+type pub Person {
+  let mut @name: String
+
+  fn pub static new(name: String) -> Person {
+    Person(name: name)
+  }
+
+  fn pub mut name=(new_name: String) {
+    @name = new_name
+  }
 }
 
-person.name = "Alice"  # Calls name= method
+let mut person = Person.new("Bob")
+person.name = "Alice"  # Calls the name= method
 ```

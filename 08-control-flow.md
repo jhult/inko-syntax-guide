@@ -17,16 +17,14 @@ for (key, val) in pairs {
   out.print("${key}: ${val}")
 }
 
-# Range iteration
-for i in 0..10 {
+# Range iteration (ranges are built with Int.until/Int.to)
+for i in 0.until(10) {
   # i from 0 to 9
 }
 
 # Step iteration
-for i in 0..10 {
-  if i % 2 == 0 {
-    # Process even numbers
-  }
+for i in 0.until(10).step_by(2) {
+  # i is 0, 2, 4, 6, 8
 }
 ```
 
@@ -62,20 +60,32 @@ loop {
 
 ### Range Syntax
 
-**Exclusive range** (`..`):
+Inko has no `a..b` range literal. Ranges are created with `Int.until` and
+`Int.to`:
+
+**Exclusive range** (`until`):
 
 ```inko
-for i in 0..10 {
+for i in 0.until(10) {
   # i goes from 0 to 9
 }
 ```
 
-**Inclusive range** (`..=`):
+**Inclusive range** (`to`):
 
 ```inko
-for i in 0..=10 {
+for i in 0.to(10) {
   # i goes from 0 to 10 (inclusive)
 }
+```
+
+**Ranges as values:**
+
+```inko
+let range = 1.to(10)
+range.contains?(5)            # => true
+range.step_by(2).to_array     # => [1, 3, 5, 7, 9]
+range.size                    # => 10
 ```
 
 ### Loop with Index
@@ -115,22 +125,46 @@ type pub Counter {
 
 impl Counter {
   fn pub mut increment {
-    @count = @count + 1  # NOT += (operator doesn't exist)
+    @count = @count + 1  # or: @count += 1
   }
 }
 ```
 
-**CRITICAL:** Inko does NOT have `+=`, `-=`, `*=`, `/=` operators. Always write out the full assignment:
+Compound assignment operators (`+=`, `-=`, `*=`, `/=`, `%=`) **are** supported
+for integers and any type implementing the matching operator:
 
-- `@count += 1`
-- `@count = @count + 1`
+```inko
+@count += 1        # Same as @count = @count + 1
+@total -= amount   # Same as @total = @total - amount
+```
+
+Note that `+=` uses the type's `+` operator, so it only works where `+` is
+defined (e.g. `Int`, `Float`, `String` — but not `Array`).
 
 ### Mutable Parameters
 
+Parameters are immutable (can't be reassigned) unless they're a mutable
+reference. Declare mutable references as `param: mut Type`, and pass the value
+with `mut` at the call site:
+
 ```inko
-fn pub process(mut input: String) -> String {
-  input = input.to_upper
-  input
+fn process(input: mut Array[Int]) -> Int {
+  input.push(1)
+  input.size
+}
+
+let mut values = [1, 2]
+process(mut values)
+```
+
+Mutable borrows of value types (`mut Int`, `mut String`) are a compile error.
+To rebind an owned parameter, introduce a new mutable local:
+
+```inko
+fn normalize(input: String) -> String {
+  let mut out = input.trim
+  out = out.to_upper
+  out
 }
 ```
 
@@ -142,11 +176,11 @@ Stack-allocated inline/copy types can be assigned through owned references:
 type pub Point {
   let mut @x: Int
   let mut @y: Int
-}
 
-fn pub mut move_to(x: Int, y: Int) {
-  @x = x  # Direct assignment works
-  @y = y
+  fn pub mut move_to(x: Int, y: Int) {
+    @x = x  # Direct assignment works
+    @y = y
+  }
 }
 ```
 

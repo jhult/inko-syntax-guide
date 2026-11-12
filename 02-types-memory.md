@@ -40,12 +40,14 @@ impl Person {
 ## Generic Type
 
 ```inko
+import std.hash (Hash)
+
 type pub HashMap[K, V] {
   let @buckets: Array[Array[(K, V)]]
   let @size: Int
 }
 
-impl HashMap[K, V] {
+impl HashMap if K: Hash {
   fn pub static new -> HashMap[K, V] {
     HashMap(
       buckets: [],
@@ -59,6 +61,8 @@ impl HashMap[K, V] {
 
 - Use square brackets for type parameters: `[K, V]`
 - Generic types are specialized at compile time for better performance
+- Reopening a generic type requires requirements: `impl HashMap if K: Hash { ... }`
+  (plain `impl HashMap[K, V] { ... }` is invalid syntax)
 
 ---
 
@@ -293,27 +297,34 @@ Inko supports three reference types:
 Read-only access without ownership transfer:
 
 ```inko
-fn print_length(text: ref String) {
+fn total(values: ref Array[Int]) -> Int {
   # Can read but not modify
-  text.size
+  values.size
 }
 
-let msg = "hello"
-print_length(ref msg)  # msg is still owned by this scope
+let items = [1, 2, 3]
+let count = total(ref items)  # items is still owned by this scope
 ```
+
+**Note:** borrowing a value type (`ref Int`, `ref String`, ...) compiles but
+raises a `borrow-value-type` warning, because value types are copied anyway.
+Only borrow heap types (`Array`, `Map`, custom `type`s).
 
 #### Mutable References (`mut T`)
 
 Modify access without ownership transfer:
 
 ```inko
-fn increment(value: mut Int) {
-  # Can modify through the reference
+fn grow(values: mut Array[Int]) {
+  values.push(1)
 }
 
-let mut count = 0
-increment(mut count)
+let mut items = [1, 2, 3]
+grow(mut items)
 ```
+
+Mutable borrows are only valid for heap types: `mut Int` is a compile error,
+as `Int` is immutable.
 
 #### Unique References (`uni T`)
 

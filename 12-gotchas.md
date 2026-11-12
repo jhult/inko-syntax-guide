@@ -9,7 +9,7 @@
 | 1 | `=>` instead of `->` in match | Rust/Scala | COMPILE ERROR |
 | 2 | `class` instead of `type` | Python/Java | COMPILE ERROR |
 | 3 | Explicit `self` parameter | Rust/Python | COMPILE ERROR |
-| 4 | `+=`, `-=` operators | Most languages | COMPILE ERROR |
+| 4 | `not x` for boolean negation | Python/Lua | COMPILE ERROR |
 | 5 | `Some`/`None` for array access | Rust (pre-0.19) | COMPILE ERROR |
 | 6 | Single IP to TcpClient | N/A | COMPILE ERROR |
 | 7 | Missing parentheses in comparisons | N/A | COMPILE ERROR |
@@ -75,21 +75,26 @@ fn pub mut do_something(value: Int) -> Int { }
 fn pub get_value -> String { }
 ```
 
-## 4. No compound assignment operators
+## 4. Boolean negation is `!`, not `not`
 
 **Wrong:**
 
 ```inko
-@counter += 1
-@total -= amount
+if not value.empty? { }
+let x = not done
 ```
 
 **Right:**
 
 ```inko
-@counter = @counter + 1
-@total = @total - amount
+if !value.empty? { }
+let x = !done
 ```
+
+The `not` keyword doesn't exist; `!` is the only boolean negation operator.
+
+**Note:** `+=`, `-=`, `*=`, `/=`, and `%=` *do* exist, e.g. `@counter += 1` is
+valid for integers (and any type with the matching operator).
 
 ## 5. Array.get() returns Result, not Option
 
@@ -112,7 +117,8 @@ match array.get(0) {
 }
 
 # Or for quick conversion:
-let value = array.get(0).or_panic("index out of bounds")
+let value = array.get(0).or_panic
+let value = array.get(0).or_panic_with("index out of bounds")
 ```
 
 ## 6. TcpClient expects Array[IpAddress]
@@ -224,40 +230,42 @@ let end = match find_substring_from(d, "\"", start) {
 
 ### Import Statement Issues
 
-**File I/O imports:**
+**File I/O imports:** there is no `File` type. Open files with
+`ReadOnlyFile`, `WriteOnlyFile`, or `ReadWriteFile` from `std.fs.file`:
 
 ```inko
-# Correct import for File operations
-import std.fs.file (File)
+import std.bytes (ByteArray)
+import std.fs.file (ReadOnlyFile)
+
+let file = ReadOnlyFile.new('data.txt'.to_path).or_panic
+let bytes = ByteArray.new
+file.read_all(bytes).or_panic
 ```
 
-### Working Around Map.insert() Limitation
+`import std.fs.file (File)` fails because no such type exists, and
+`std.fs.path` only provides path manipulation (`Path`).
 
-**Map doesn't have an `insert()` method in 0.20.0:**
+### Use Map.set, Not Map.insert
 
-**Workaround 1:** Use `Array[(String, String)]` instead:
+`Map` has no `insert()` method. Use `Map.set`, which returns the previous value
+(if any) as an `Option[V]`:
 
 ```inko
-let mut headers = []
-headers.push(("subject", "Test"))
-headers.push(("from", "user@example.com"))
+import std.map (Map)
 
-# Lookup
-fn get_value(headers: Array[(String, String)], key: String) -> Option[String] {
-  for entry in headers.iter {
-    match entry {
-      case (k, v) -> {
-        if k == key {
-          return Option.Some(v)
-        }
-      }
-    }
-  }
-  Option.None
+let map: Map[String, String] = Map.new
+
+map.set("subject", "Test")
+map.set("from", "user@example.com")
+
+match map.get("subject") {
+  case Ok(value) -> value  # => 'Test'
+  case Error(_) -> "missing"
 }
 ```
 
-**Workaround 2:** Use iterative search for small datasets.
+`Map.try_set` returns `Result[mut V, (K, mut V, V)]` when you need to insert
+only if the key is absent.
 
 ### Local Package Dependencies
 
@@ -311,50 +319,54 @@ let y = Option.None
 
 This also applies to `Result`: use `case Ok(v)` / `case Error(e)` in patterns, but `Result.Ok(v)` / `Result.Error(e)` in expressions.
 
-## 11. Parameter mutability: `param: mut Type` vs `mut param: Type`
+## 11. Parameter mutability: `param: mut Type` only
 
-These two syntaxes mean completely different things.
+Parameters are immutable by default: you can't assign them a new value. The only
+way to get a mutable parameter is a mutable **reference**, written with `mut`
+on the *type*:
 
-- **`param: mut Type`** — the parameter is a mutable **reference** to a value of type `Type`. The caller passes `mut value` and the function can modify the value through the reference.
-- **`mut param: Type`** — the parameter is an owned value that the local variable can be **reassigned** to (like `let mut`). The caller passes an owned value and the function can rebind the variable.
+- **`param: mut Type`** — the parameter is a mutable reference to a value of
+  type `Type`. The caller passes `mut value`, and the method can modify the
+  value through the reference.
+- **`mut param: Type`** — invalid syntax. There is no "rebindable parameter"
+  form; introduce a mutable local instead.
 
-**Wrong (trying to pass a mutable reference):**
-
-```inko
-fn increment(value: mut Int) {
-  value = value + 1
-}
-let mut count = 0
-increment(mut count)      # This works, but...
-increment(mut count: Int)  # Error: wrong syntax
-```
-
-**Wrong (trying to make a rebindable local):**
+**Wrong (`mut` before the parameter name is a syntax error):**
 
 ```inko
-fn process(mut data: Array[Int]) {
-  data.push(1)  # Error: can't mutate through a rebinding, only through mut reference
+fn process(mut input: String) -> String {  # Error: expected an identifier
+  input = input.trim
+  input
 }
 ```
 
-**Right (mutable reference for mutation):**
+**Right (mutable reference for in-place mutation):**
 
 ```inko
-fn pub mut handle(request: mut Request) -> Response {
-  # request is a mutable reference, can modify through it
+fn grow(values: mut Array[Int]) {
+  values.push(1)
 }
+
+let mut items = [1, 2]
+grow(mut items)
 ```
 
 **Right (rebindable local for reassignment):**
 
 ```inko
-fn process(mut input: String) -> String {
-  input = input.trim  # rebinding the local variable
-  input
+fn process(input: String) -> String {
+  let mut out = input.trim
+  out = out.to_upper
+  out
 }
 ```
 
-**Rule of thumb:** If you need to modify the value the caller owns, use `param: mut Type`. If you just need to reassign the local variable within the function, use `mut param: Type`.
+Mutable borrows are only valid for heap types: `fn f(value: mut Int)` is an
+error because `Int` has no mutable state.
+
+**Rule of thumb:** If you need to modify the value the caller owns, use
+`param: mut Type`. If you only need to reassign a local inside the function,
+declare a new `let mut` variable.
 
 ## 12. Unary negation `(-x)` is not valid syntax
 
@@ -391,7 +403,9 @@ fn read_file -> Result[String, std.io.Error] {  # Error: nested path in type
 ```inko
 import std.io (Error)
 
-fn read_file -> Result[String, Error] {
+fn read_file(path: String) -> Result[String, Error] {
+  # ...
+}
 ```
 
 This applies to any type annotation: function return types, parameter types, field types, and let bindings. Import the type from its module and use the short name.
@@ -405,12 +419,15 @@ This applies to any type annotation: function return types, parameter types, fie
 ```inko
 match array.get(0) {
   case Ok(item) -> {
-    let owned = item  # Error: item is ref T, can't move from a reference
-    some_function(item)  # Error: can't pass ref where owned is expected
+    # Error: expected an owned Array[Int], found a ref Array[Int]
+    some_function(item)
   }
   case Error(_) -> {}
 }
 ```
+
+Assigning `item` to another variable copies the *reference* (it doesn't move the
+value), so the error only shows up where an owned value is required.
 
 **Right:**
 
@@ -432,11 +449,14 @@ match array.get(0) {
 
 When reading from stdin or a file, `read_line` signals EOF by returning `Ok(0)` (zero bytes read), **not** an `Error`. You must check the byte count to detect EOF.
 
+`read_line` reads into a `ByteArray` (`BufferedReader.read_line(into: mut
+ByteArray, inclusive: Bool)`).
+
 **Wrong (infinite loop on EOF):**
 
 ```inko
 loop {
-  match inp.read_line(into: buf, inclusive: false) {
+  match inp.read_line(into: mut buf, inclusive: false) {
     case Ok(_) -> {
       # Process line — but this runs even on EOF!
       # The loop never terminates.
@@ -450,7 +470,7 @@ loop {
 
 ```inko
 loop {
-  match inp.read_line(into: buf, inclusive: false) {
+  match inp.read_line(into: mut buf, inclusive: false) {
     case Ok(n) -> {
       if n == 0 { break }  # EOF: zero bytes read
       # Process line...

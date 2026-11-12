@@ -56,12 +56,12 @@ Call extern functions just like regular Inko functions:
 # No parameters
 let result = sodium_init
 
-# With parameters
+# With parameters: cast Inko values to the C types used in the signature
 let buf = ByteArray.filled(with: 0, times: 32)
-randombytes_buf(buf.to_pointer as Pointer[Uint8], 32)
+randombytes_buf(buf.pointer, 32 as Int64)
 
-# Check return value
-if result == 0 {
+# C types have no operators, so cast before comparing
+if (result as Int) == 0 {
   # Success
 }
 ```
@@ -73,54 +73,71 @@ Inko requires explicit type casting between C types and Inko types:
 ```inko
 # Convert Inko Int to C Int64
 let size = array.size
-let c_size = size.to_int64
+let c_size = size as Int64
 
 # Convert C return value to Inko Int
 let c_result = some_c_function()
-let inko_result = c_result.to_int
+let inko_result = c_result as Int
 
 # Cast pointer types
-let ptr = buffer.to_pointer as Pointer[Uint8]
+let ptr = buffer.pointer as Pointer[Uint8]
 ```
+
+Unlike Inko values, C types (`Int32`, `Uint64`, `Float64`, ...) don't define
+methods or operators, so casts are required before doing anything with them.
 
 ## Pointer Types
 
-Use typed pointers for safety:
+Pointers are written `Pointer[T]`, where `T` is the pointed-to type:
 
 ```inko
 # Pointer to bytes
 let byte_ptr: Pointer[Uint8]
 
-# Pointer to pointer (e.g., char** in C)
-let ptr_ptr: Pointer[Pointer[Uint8]]
-
 # Pointer to integers
 let int_ptr: Pointer[Int64]
+
+# Pointer to an extern struct
+let time_ptr: Pointer[Timespec]
 ```
 
-**Working with pointers:**
+**There is no `Pointer[Pointer[T]]`.** Inko pointer-pointers are represented as
+plain `Pointer[T]` values (a `char**` is just `Pointer[Uint8]`), and `Pointer`
+itself is not a value you can call methods on.
+
+**Creating, reading and writing pointers:**
 
 ```inko
-# Allocate memory
-let ptr = Pointer.alloc(size)
+# Create a pointer with `mut expr` (requires a mutable place)
+let mut spec = Timespec(tv_sec: 0 as Int64, tv_nsec: 0 as Int64)
+let ptr = mut spec
 
-# Write to pointer
-ptr.write_u8(value)
+# Read/write fields through the pointer (no intermediate copy)
+ptr.tv_sec = 400 as Int64
 
-# Read from pointer
-let value = ptr.read_u8
+# Dereference: the 0 field returns a *copy* of the pointed-to value
+let copy = ptr.0
 
-# Offset pointer
-let next_ptr = ptr.offset(1)
+# "NULL" is the integer zero cast to a pointer
+let null_ptr = 0 as Pointer[Timespec]
 
-# Check if null
-if ptr.is_null {
-  # Handle null pointer
+# Check for NULL by casting back to Int
+if (null_ptr as Int) == 0 {
+  # Handle the NULL pointer
 }
 
-# Free memory
-Pointer.dealloc(ptr, size)
+# Pointers to bytes: use String.pointer / ByteArray.pointer
+let bytes = "abc".pointer
 ```
+
+**Key points:**
+
+- Inko has **no pointer arithmetic**: `ptr + 16` is invalid. Cast to `Int`,
+  add, and cast back: `(ptr as Int + 16) as Pointer[Uint8]`
+- Memory for FFI must be managed by you; use `std.alloc` (e.g.
+  `alloc.allocate(size)`, `alloc.free(ptr)`) or the C library's own
+  allocator/free function
+- `std.ptr` exists but its methods are internal to the standard library
 
 ## Complete FFI Example
 
@@ -153,15 +170,14 @@ impl SodiumRandom {
 
   fn pub random_bytes(size: Int) -> ByteArray {
     let buf = ByteArray.filled(with: 0, times: size)
-    let ptr = buf.to_pointer as Pointer[Uint8]
-    randombytes_buf(ptr, size as Int64)
+    randombytes_buf(buf.pointer, size as Int64)
     buf
   }
 
   fn pub hash_sha256(input: ByteArray) -> Result[ByteArray, String] {
     let output = ByteArray.filled(with: 0, times: 32)
-    let output_ptr = output.to_pointer as Pointer[Uint8]
-    let input_ptr = input.to_pointer as Pointer[Uint8]
+    let output_ptr = output.pointer
+    let input_ptr = input.pointer
     let result = crypto_hash_sha256(
       output_ptr,
       input_ptr,
@@ -225,17 +241,17 @@ impl SodiumRandom {
 **Type mismatch errors:**
 
 - Use explicit casts: `value as Pointer[Uint8]`
-- Convert between Inko and C types: `.to_int64`, `.to_int`
+- Convert between Inko and C types with `as`: `value as Int64`, `value as Int`
 - Check pointer types match C function signatures
 - **Important:** Int32 from FFI needs `as Int` cast before comparisons
-- **Integer conversions:** Pass Int values as Int64 to FFI functions with Int64 parameters using `value as Int64`
+- **Integer conversions:** `Int` isn't implicitly converted to `Int64` in signatures, so pass `value as Int64`
 - **NULL pointers:** Use `(0 as Pointer[Uint64])` for NULL pointer parameters
 
 **Ownership with FFI:**
 
-- Field access returns `ref ByteArray`, use `.clone` to get owned copy
-- Passing `ref ByteArray` to function expecting `ByteArray` causes compile error
-- Use `.clone()` when value needs to be used after moving to FFI function
+- Field access returns `ref ByteArray`, use `.clone` to get an owned copy
+- Passing `ref ByteArray` to a function expecting `ByteArray` is a compile error
+- Use `.clone` when a value needs to be used after moving it to an FFI function
 
 **FFI return value comparison:**
 

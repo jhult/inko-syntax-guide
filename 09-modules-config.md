@@ -187,10 +187,10 @@ import std.net.http.server (Handle, Request, Response, Server)
 
 ```inko
 # When imported with (Symbol)
-let x = Int.parse("123", format: base: 10)
+let x = Int.parse("123", base: 10)
 
-# When importing entire module
-let x = std.int.Int.parse("123", format: base: 10)
+# When importing the entire module: use its last path segment as the qualifier
+let y = int.Int.parse("123", base: 10)
 ```
 
 ### Module Structure
@@ -209,19 +209,24 @@ import http.server
 ### Various Import Forms
 
 ```inko
-# Import entire module
+# Import entire module (qualify with the module's last segment: `http.Status`)
 import std.net.http
 
 # Import specific symbols
-import std.net.http (Server, Client)
+import std.net.http.server (Server)
+import std.net.http.client (Client)
 
 # Import with alias
-import std.net.http (Server as HttpServer)
+import std.net.http.server (Server as HttpServer)
 
-# Multiple imports
-import std.fs (file, path)
+# Multiple imports (one per module; there is no "import a submodule" syntax)
+import std.fs.path (Path)
 import std.io (Read, Write)
 ```
+
+**Note:** you can only import symbols defined in a module. Submodules must be
+imported by their full path, e.g. `import std.fs.path (Path)`, not
+`import std.fs (path)`.
 
 ### Module Name Resolution
 
@@ -256,9 +261,8 @@ fn pub get_config -> String {
 
 ```inko
 import std.int (Int)
-
 fn pub parse_port(port_str: String) -> Int {
-  match Int.parse(port_str, format: base: 10) {
+  match Int.parse(port_str, base: 10) {
     case Some(p) -> p
     case None -> 3000  # default
   }
@@ -267,8 +271,10 @@ fn pub parse_port(port_str: String) -> Int {
 
 **Key points:**
 
-- `Int.parse()` takes two args: string and `format: base: 10`
-- `Int.parse()` returns `Option[Int]` (not Result!)
+- `Int.parse()` takes the input and a `base:` argument: `Int.parse(text, base: 10)`
+- `Int.parse()` returns `Option[Int]` (not `Result`)
+- `Int.format(base: 10)` is the reverse operation
+- The old `format: base: 10` argument was removed in 0.21.0
 - Import `Format` from `std.int`, NOT `std.fmt`
 
 ### Command-Line Arguments

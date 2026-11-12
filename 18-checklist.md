@@ -9,25 +9,25 @@ Before outputting Inko code, verify each item:
 - [ ] **Field access**: Using `@field` not `self.field`
 - [ ] **No self parameter**: Methods don't have explicit `self` in signature
 - [ ] **Method modifiers order**: `fn pub static` or `fn pub mut` (pub after fn)
-- [ ] **Assignment**: Using `x = x + 1` not `x += 1`
+- [ ] **Assignment**: `x = x + 1` and `x += 1` are both valid (`+=`, `-=`, `*=`, `/=`, `%=` exist)
 - [ ] **Logical operators**: Using `and`/`or` not `&&`/`||`
-- [ ] **Negation**: Using `not x` not `!x` for boolean negation
+- [ ] **Negation**: Using `!x` (there is no `not` keyword)
 
 ## Type System Verification
 
 - [ ] **Array access**: `.get(i)` returns `Result[ref T, ...]`, not `Option`. Use `.clone` for owned copies of non-value types.
 - [ ] **Option/Result in match**: Using `case Some(v)` and `case None` in match **patterns**, but `Option.Some(x)` and `Option.None` as **expressions**
-- [ ] **Return statements**: Can use bare `Ok(x)` and `Error(e)` in return statements only
+- [ ] **Return statements**: Always write `Result.Ok(x)` / `Result.Error(e)`; bare `Ok`/`Error` only work as patterns
 - [ ] **Generic syntax**: Using `Type[T]` not `Type<T>`
 - [ ] **Mutable fields**: Using `let mut @field` for mutable fields
 - [ ] **Clone for custom types**: `impl Clone for X` needed for `type inline` and regular `type` if you need `.clone`
 
 ## Error Handling Verification
 
-- [ ] **Fallible methods**: Using `!! ErrorType` in signature for methods that can fail
+- [ ] **Fallible methods**: Returning `Result[T, E]` and using `throw E` (there is no `!!` syntax)
 - [ ] **Error propagation**: Using `try operation` not `operation?`
-- [ ] **Panic on error**: Using `try!` or `.or_panic("msg")` not `.unwrap()`
-- [ ] **Error handling**: Using `try...else` for explicit error handling
+- [ ] **Panic on error**: Using `.or_panic` / `.or_panic_with("msg")` not `.unwrap()` (there is no `try!`)
+- [ ] **Error handling**: Pattern matching on `Result` when the error must be handled locally (there is no `try ... else`)
 
 ## Common Patterns Verification
 
@@ -41,7 +41,7 @@ Before outputting Inko code, verify each item:
 - [ ] **References**: Using `ref T` and `mut T` not `&T` and `&mut T`
 - [ ] **Unique values**: Using `uni T` and `recover { }` for process-safe values
 - [ ] **Cloning**: Using `.clone` to copy owned values when needed
-- [ ] **Parameter mut**: `param: mut Type` for mutable references, `mut param: Type` for rebindable locals
+- [ ] **Parameter mut**: `param: mut Type` for mutable references; `mut param: Type` is invalid syntax
 - [ ] **@field in fn mut**: Accessing `@field` in `fn mut` methods returns `mut T` — use `.clone` or extract fields for owned copies
 
 ## Before Finalizing
@@ -69,7 +69,7 @@ Before outputting Inko code, verify each item:
 | Pattern match | `match value { case X -> ... }` |
 | Option | `Option.Some(x)` / `Option.None` |
 | Result | `Result.Ok(x)` / `Result.Error(e)` |
-| Error handling | `try operation` / `try! operation` / `try operation else { ... }` |
+| Error handling | `try operation` / `match result { ... }` / `.or_panic` |
 | For loop | `for item in collection { ... }` |
 | Infinite loop | `loop { ... }` |
 | Import | `import std.module (Symbol1, Symbol2)` |
@@ -85,11 +85,14 @@ Before outputting Inko code, verify each item:
 | `case X => ...` | `case X -> ...` |
 | `fn foo(self, x: Int)` | `fn foo(x: Int)` |
 | `self.field` | `@field` |
-| `x += 1` | `x = x + 1` |
+| `not x` | `!x` |
 | `&&` / `\|\|` | `and` / `or` |
 | `arr[0]` | `arr.get(0)` |
 | `pub fn foo()` | `fn pub foo()` |
-| `.unwrap()` | `.or_panic("msg")` |
+| `.unwrap()` | `.or_panic` / `.or_panic_with("msg")` |
 | `operation?` | `try operation` |
+| `fn f() !! Error` | `fn f() -> Result[T, Error]` + `throw` |
+| `try! operation` | `operation.or_panic` |
+| `for i in 0..10` | `for i in 0.until(10)` |
 | `Type<T>` | `Type[T]` |
 | `&T` / `&mut T` | `ref T` / `mut T` |

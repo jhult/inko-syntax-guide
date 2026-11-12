@@ -6,8 +6,8 @@
 # Tuple destructuring in let bindings
 let (name, age) = ('Alice', 42)
 
-# Array destructuring
-let [first, second] = [10, 20]
+# Array destructuring (array patterns are non-exhaustive, so `else` is required)
+let [first, second] = [10, 20] else panic("expected two values")
 
 # Pattern with else (required for non-exhaustive patterns)
 let Some(value) = optional else {
@@ -17,8 +17,11 @@ let Some(value) = optional else {
 
 **Key points:**
 
+- Tuple patterns are exhaustive; **array** patterns are not (the array could be
+  longer or shorter), so they always need an `else`
 - Non-exhaustive patterns require an `else` branch that diverges
-- The `else` branch must use `panic`, `return`, `throw`, etc.
+- The `else` branch must use `panic`, `return`, `throw`, etc. — it can't produce
+  a fallback value
 
 ## Matching Options
 
@@ -66,20 +69,28 @@ impl Handle for MyApp {
 
 ## Array Destructuring
 
+Array patterns match an **exact** size. Variable-size patterns such as
+`[first, second, ..rest]` aren't supported:
+
 ```inko
-match result {
-  case [first, second, ..rest] -> {
-    # first and second are extracted
-    # rest contains remaining elements
+match values {
+  case [first, second] -> {
+    # Exactly two elements
   }
   case [single] -> {
-    # Single element array
+    # Exactly one element
   }
   case [] -> {
     # Empty array
   }
+  case _ -> {
+    # Three or more elements
+  }
 }
 ```
+
+To get at the remaining elements, use `Array.split_first`/
+`Array.split_last` or `Array.slice`.
 
 ## Class Literal Patterns
 
