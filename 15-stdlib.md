@@ -1,4 +1,4 @@
-# Standard Library Reference (0.20.0)
+# Standard Library Reference (0.21.1)
 
 **Official Documentation:** [https://docs.inko-lang.org/std/main/](https://docs.inko-lang.org/std/main/)
 

@@ -199,7 +199,7 @@ impl SodiumRandom {
 ### Common Pitfalls
 
 - Don't use `extern fn` syntax (deprecated)
-- Don't try to use `std.ffi` module (doesn't exist in 0.20.0)
+- Don't try to use `std.ffi` module (doesn't exist in 0.21.1)
 - Remember to link the library with `import extern`
 - Use `Pointer[T]` not raw `Pointer`
 - **0.20.0 breaking change:** `UInt8`/`UInt16`/`UInt32`/`UInt64` renamed to `Uint8`/`Uint16`/`Uint32`/`Uint64`
@@ -219,7 +219,7 @@ impl SodiumRandom {
 
 **"the module 'std.ffi' couldn't be found":**
 
-- Don't import std.ffi in Inko 0.20.0
+- Don't import std.ffi in Inko 0.21.1
 - Use `import extern` and `fn extern` directly
 
 **Type mismatch errors:**
