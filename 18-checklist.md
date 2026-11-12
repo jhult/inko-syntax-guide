@@ -64,7 +64,7 @@ Before outputting Inko code, verify each item:
 | Instance method | `fn pub method_name -> ReturnType { ... }` |
 | Mutable method | `fn pub mut method_name -> ReturnType { ... }` |
 | Static method | `fn pub static method_name -> ReturnType { ... }` |
-| Async method | `fn async pub method_name -> ReturnType { ... }` |
+| Async method | `fn pub async method_name(promise: uni Promise[T], ...) { ... }` |
 | Field access | `@field_name` |
 | Pattern match | `match value { case X -> ... }` |
 | Option | `Option.Some(x)` / `Option.None` |

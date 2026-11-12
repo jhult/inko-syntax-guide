@@ -53,7 +53,7 @@ Use `loop` with `break`:
 
 ```inko
 loop {
-  if not condition {
+  if !condition {
     break
   }
   # Do work

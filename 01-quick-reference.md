@@ -60,8 +60,8 @@ fn pub method_name -> ReturnType { ... }
 # Instance method (mutable)
 fn pub mut method_name -> ReturnType { ... }
 
-# Async method
-fn async pub method_name -> ReturnType { ... }
+# Async method (no return type; resolve a Promise instead)
+fn pub async method_name(promise: uni Promise[ReturnType], ...) { ... }
 ```
 
 ## Essential Type Patterns
@@ -71,16 +71,16 @@ fn async pub method_name -> ReturnType { ... }
 type pub MyType { let @field: Type }
 
 # Stack-allocated (small types)
-type inline pub Point { let @x: Int, let @y: Int }
+type pub inline Point { let @x: Int, let @y: Int }
 
 # Atomically reference-counted (shared immutable, NEW 0.20.0)
-type ref pub SharedConfig { let @name: String, let @version: Int }
+type pub ref SharedConfig { let @name: String, let @version: Int }
 
 # Enum/ADT
-type enum pub Status { case Active, case Inactive }
+type pub enum Status { case Active, case Inactive }
 
 # Process type (concurrency)
-type async pub Worker { let @id: Int }
+type pub async Worker { let @id: Int }
 ```
 
 ## Error Handling Quick Reference

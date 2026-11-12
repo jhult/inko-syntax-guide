@@ -210,7 +210,7 @@ import std.sync (Promise)
 type async Worker {
   let @id: Int
 
-  fn async pub compute(data: String, promise: uni Promise[String]) {
+  fn pub async compute(promise: uni Promise[String], data: String) {
     let result = process_data(data)
     promise.set(result)
   }
@@ -240,7 +240,7 @@ impl Connection {
   }
 
   fn pub mut close {
-    if not @closed {
+    if !@closed {
       # Close the resource
       @closed = true
     }

@@ -87,8 +87,8 @@ The correct order of method modifiers is:
 fn pub static new(...)        # Static constructor
 fn pub method_name(...)       # Public instance method (immutable)
 fn pub mut method_name(...)   # Public instance method (mutable)
-fn async pub method_name(...) # Async public method
-fn async pub mut method(...)  # Async mutable public method
+fn pub async method_name(...) # Async public method
+fn pub async mut method(...)  # Async mutable public method
 ```
 
 ## Visibility Rules

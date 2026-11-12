@@ -90,7 +90,7 @@ type pub User {
 Stack-allocated types that copy data when borrowed.
 
 ```inko
-type inline pub Point {
+type pub inline Point {
   let @x: Int
   let @y: Int
 }
@@ -119,7 +119,7 @@ type inline pub Point {
 Stack-allocated immutable types that copy on moves, like primitives.
 
 ```inko
-type copy pub Color {
+type pub copy Color {
   let @r: Int
   let @g: Int
   let @b: Int
@@ -145,7 +145,7 @@ type copy pub Color {
 Atomically reference-counted types that behave as value types. Multiple owners can read fields simultaneously.
 
 ```inko
-type ref pub SharedConfig {
+type pub ref SharedConfig {
   let @name: String
   let @version: Int
 }
@@ -169,12 +169,12 @@ type ref pub SharedConfig {
 Enum classes support variants with or without associated data.
 
 ```inko
-type enum pub Result[T, E] {
+type pub enum Result[T, E] {
   case Ok(T)
   case Error(E)
 }
 
-type enum pub Option[T] {
+type pub enum Option[T] {
   case Some(T)
   case None
 }
@@ -211,13 +211,13 @@ type copy enum Direction {
 Process types spawn lightweight concurrent processes.
 
 ```inko
-type async pub Worker {
+type pub async Worker {
   let @id: Int
   let mut @tasks: Int
 }
 
 impl Worker {
-  fn async pub mut process_task {
+  fn pub async mut process_task {
     @tasks = @tasks + 1
   }
 }
@@ -352,7 +352,7 @@ When you need to get owned copies from `ref T` references (e.g., from `Array.get
 ```inko
 import std.clone (Clone)
 
-type inline pub Color {
+type pub inline Color {
   let @name: String
   let @rgb: Array[Int]
 }
@@ -369,7 +369,7 @@ For `type enum` with variants containing heap data:
 ```inko
 import std.clone (Clone)
 
-type inline enum pub JsonValue {
+type pub inline enum JsonValue {
   case Null
   case Boolean(Bool)
   case Number(String)
