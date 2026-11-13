@@ -22,8 +22,11 @@
 | 14 | `Array.get` returns `ref T`, not owned | Rust | COMPILE ERROR |
 | 15 | `read_line` EOF returns `Ok(0)`, not `Error` | Most languages | LOGIC ERROR |
 | 16 | `UInt8`/`UInt32` instead of `Uint8`/`Uint32` | Pre-0.20 | COMPILE ERROR |
+| 17 | Public non-async instance methods on `async` types | Rust/Other | COMPILE ERROR |
+| 18 | Passing directories to `inko fmt --check` | N/A | COMMAND ERROR |
+| 19 | Assuming `String.starts_with` is in the stdlib | Rust/Other | COMPILE ERROR |
 
----
+______________________________________________________________________
 
 ## 1. Match uses `->` not `=>`
 
@@ -181,7 +184,7 @@ let as_string = view.to_string  # Convert to String if needed
 - Release builds: wrap using two's complement
 - Use checked/wrapping arithmetic methods if you need specific behavior
 
----
+______________________________________________________________________
 
 ## Additional Gotchas
 
@@ -286,7 +289,9 @@ require github.com/user/local-dependency 0.1.0 abc123def456789...
 
 - Use `require URL VERSION CHECKSUM` format
 - Get commit SHA with `git log -1 --format='%H'`
-- Use relative paths like `../local-dependency` for local development
+- Use relative paths like `../local-package` for local development
+- The local repository must have a tag `vVERSION`; `inko pkg sync` clones that
+  tag before checking out the checksum commit
 - After publishing to GitHub, switch to Git URLs
 
 ## 10. Match patterns use `None`/`Some`, expressions use `Option.None`/`Option.Some`
@@ -449,8 +454,7 @@ match array.get(0) {
 
 When reading from stdin or a file, `read_line` signals EOF by returning `Ok(0)` (zero bytes read), **not** an `Error`. You must check the byte count to detect EOF.
 
-`read_line` reads into a `ByteArray` (`BufferedReader.read_line(into: mut
-ByteArray, inclusive: Bool)`).
+`read_line` reads into a `ByteArray` (`BufferedReader.read_line(into: mut ByteArray, inclusive: Bool)`).
 
 **Wrong (infinite loop on EOF):**
 
@@ -499,3 +503,84 @@ fn extern randombytes_buf(buf: Pointer[Uint8], len: Int64)
 ```
 
 This affects all unsigned FFI integer types: `Uint8`, `Uint16`, `Uint32`, `Uint64`.
+
+## 17. Synchronous instance methods on `async` types must be private
+
+An `async` type may expose public **async** instance methods and public static
+methods. A synchronous instance method with `pub` is rejected:
+
+```inko
+type async Dispatcher {
+  # OK: async instance methods may be public
+  fn pub async run { }
+
+  # ERROR: non-async instance methods on async types must be private
+  fn pub mut load { }
+
+  # OK
+  fn mut load { }
+}
+```
+
+Static constructors also cannot call private instance methods. The compiler
+reports `the method 'load' exists but is private`:
+
+```inko
+# ERROR
+fn pub static with_path(path: String) -> Dispatcher {
+  let dispatcher = Dispatcher()
+
+  dispatcher.load(path)
+  dispatcher
+}
+```
+
+Put reusable setup logic in a module-level function, or expose a public method
+on a non-async type that the constructor calls:
+
+```inko
+# OK: module-level helper, callable from the static constructor
+fn load(path: String) -> Array[Record] { ... }
+
+type async Dispatcher {
+  fn pub static with_path(path: String) -> Dispatcher {
+    Dispatcher(records: load(path))
+  }
+}
+```
+
+## 18. `inko fmt --check` does not accept directories
+
+Inko 0.21.1 treats its arguments as files. Passing `src/` fails with
+`failed to read src/: Is a directory`:
+
+```bash
+# Error
+inko fmt --check src/ test/
+
+# Right
+inko fmt --check $(find src test -name '*.inko')
+```
+
+`inko fmt` (without `--check`) has the same limitation; pass the files found by
+`find` when formatting a tree.
+
+## 19. `String.starts_with` is not in the standard library
+
+Plain Inko 0.21.1 does not provide `String.starts_with`, `String.ends_with`,
+`String.contains`, or `String.is_empty`. Projects sometimes add these in a
+local `std/string_ext.inko` module, so code that compiles in one project can
+fail in another or inside a shared package:
+
+```inko
+# ERROR in plain Inko: method 'starts_with' isn't defined for type 'String'
+if name.starts_with('/') { ... }
+```
+
+Compare explicitly, or import the project's extension module when one exists:
+
+```inko
+if name.size > 0 and name.substring(0, 1) == '/' { ... }
+```
+
+Shared packages should avoid project-local string extensions entirely.

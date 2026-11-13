@@ -61,7 +61,7 @@ let NUMBER = 42
 NUMBER = 50
 ```
 
----
+______________________________________________________________________
 
 ## Package Management: `inko.pkg` (IMPORTANT)
 
@@ -108,6 +108,12 @@ require ../local-package 0.1.0 <commit-sha>
 
 - Use relative paths like `../local-package`
 - Must include valid commit SHA1 checksum
+- `inko pkg sync` clones the tag `vVERSION` (for `0.1.0`, the tag must be
+  `v0.1.0`) before checking out the checksum commit
+- If the local repository has no matching tag, sync fails with
+  `Remote branch v0.1.0 not found in upstream origin`
+- Create the tag locally before syncing, for example
+  `git tag v0.1.0 <commit-sha>`
 - Useful for developing multiple related packages
 - Can switch to Git URL when publishing to GitHub
 
@@ -160,7 +166,7 @@ To publish a package:
 - The compiler strips this prefix during imports
 - Example: `github.com/user/inko-http` -> import as `http`
 
----
+______________________________________________________________________
 
 ## Imports
 
@@ -236,7 +242,7 @@ imported by their full path, e.g. `import std.fs.path (Path)`, not
 - Module name: `email.parser`
 - Import: `import email.parser (ParsedEmailMessage, EmailParser)`
 
----
+______________________________________________________________________
 
 ## Configuration
 
@@ -303,7 +309,7 @@ type async Main {
 - Args include the program arguments, NOT the program name itself
 - Import `arguments` from `std.env`
 
----
+______________________________________________________________________
 
 ## Modules and Top-Level Code
 

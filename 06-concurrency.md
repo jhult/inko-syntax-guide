@@ -90,6 +90,26 @@ type async Database {
 }
 ```
 
+**Visibility gotcha:** synchronous instance methods on an `async` type must be
+private. Public instance methods must be `async`; static methods may be `pub`:
+
+```inko
+type async Worker {
+  # OK: async instance methods may be public
+  fn pub async run { }
+
+  # ERROR: non-async instance methods on async types must be private
+  fn pub mut load { }
+
+  # OK
+  fn mut load { }
+}
+```
+
+Static constructors also cannot call private instance methods (the compiler
+reports `the method 'load' exists but is private`). Put reusable setup logic in
+module-level functions instead.
+
 **Important:** async methods cannot declare a return type. To return a value,
 accept a `uni Promise[T]` and resolve it. The `await` expression creates the
 promise for you and returns the resolved value, which is why the promise must be
